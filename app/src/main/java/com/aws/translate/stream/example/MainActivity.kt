@@ -35,15 +35,20 @@ class MainActivity : AppCompatActivity() {
         transcribeText = findViewById<TextView>(R.id.transcribeText)
 
         transcriberAndTranslator = AwsTranscribeAndTranslate(
-            "xxxxx", // todo
-            "xxxxx",
+            "xx", // todo
+            "xx",
             "zh-CN",
             "en-US",
             object : AwsTranscribeAndTranslate.TranslationListener {
 
                 override fun onTranscribe(text: String) {
                     runOnUiThread {
-                        transcribeText?.text = text;
+                        // modified by shenshaoyong
+                        if(text.equals("{\"transcript\":\"detectSilence=true\"}")){
+                            stopRecording()
+                        }else{
+                            transcribeText?.text = text
+                        };
                     }
                 }
 
