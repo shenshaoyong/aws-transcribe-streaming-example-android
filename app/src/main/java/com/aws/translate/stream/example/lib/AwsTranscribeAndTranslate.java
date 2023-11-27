@@ -43,6 +43,10 @@ public class AwsTranscribeAndTranslate {
     private TranscribeStreamingRetryClient streamingRetryClient;
     private AudioStreamPublisher requestStream;
 
+    private int silence = 0;
+    //private boolean detectSilence = false;
+    private final int SILENCESECOND = 5;
+
 
     public AwsTranscribeAndTranslate(String awsAccessKey, String awsSecretKey, String sourceLanguage, String targetLanguage, TranslationListener listener) {
 
@@ -174,6 +178,7 @@ public class AwsTranscribeAndTranslate {
                 System.out.println(String.format("=== onStream " + results.size() + "==="));
 
                 if (results.size() > 0) {
+                    silence = 0;
                     if (!results.get(0).alternatives().get(0).transcript().isEmpty()) {
                         String transcript = results.get(0).alternatives().get(0).transcript();
                         System.out.println(String.format("=== onStream " + transcript + "==="));
@@ -187,6 +192,21 @@ public class AwsTranscribeAndTranslate {
                         listener.onTranscribe(jsonObjectResult.toString());
                         String translation = translateText(transcript, sourceLanguage, targetLanguage);
                         listener.onTranslation(translation);
+                    }
+                }
+                else { //detect silence, modified by shenshaoyong
+                    silence ++;
+                    if(silence>=SILENCESECOND){
+                        JSONObject jsonObjectResult = new JSONObject();
+                        try {
+                            jsonObjectResult.put("transcript", "detectSilence=true");
+
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+                        System.out.println("=== detected silence ===");
+
+                        listener.onTranscribe(jsonObjectResult.toString());
                     }
                 }
             }
